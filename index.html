@@ -23,15 +23,30 @@
   <!-- Custom styles for this template -->
   <link href="css/agency.min.css" rel="stylesheet">
 
-  <title>Leaflet Web Map</title>
+  <title>LEAFLET MAP TEST</title>
+      <meta charset='utf-8' />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+      <meta content='' name='description' />
+      <meta content='' name='author' />
+      <!-- Styles -->
+      <link rel="stylesheet" href="styles/bootstrap.cerulean.min.css"/>
+      <link rel="stylesheet" href="styles/bootstrap-responsive.min.css"/>
 
-<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+      <!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+      <!--[if lt IE 9]>
+        <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.6.1/html5shiv.js"/>
+      <![endif]-->
 
-<script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+      <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.5/leaflet.css" />
+      <!--[if lte IE 8]>
+        <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.5/leaflet.ie.css" />
+      <![endif]-->
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"
-  integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
-  crossorigin=""/>
+      <link rel="stylesheet" href="styles/custom.css"/>
+      <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+      <!--[if lt IE 9]>
+        <script type="text/javascript" src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+      <![endif]-->
 
 </head>
 
@@ -67,34 +82,94 @@
     </div>
   </nav>
 
-  <!-- Header -->
-  <header class="masthead">
-    <div class="container">
-      <div class="intro-text">
-        <div class="intro-lead-in">Welcome To Our Studio!</div>
-        <div class="intro-heading text-uppercase">It's Nice To Meet You</div>
-        <a class="btn btn-primary btn-xl text-uppercase js-scroll-trigger" href="#services">Tell Me More</a>
-      </div>
+
+  <!-- Map -->
+  <div class='navbar'>
+  <div class='navbar-inner'>
+    <div class='container'>
+      <a class='brand' href='/'>Public Pools in Chicago</a>
     </div>
-  </header>
+  </div>
+</div>
+<div class='container-fluid'>
+  <div class='row-fluid'>
+    <div class='span4'>
+      <p>Its hot. You should go for a swim. <br />Find a pool close to you.</p>
+      <div class='well'>
+        <h4>
+          Address <small>(<a id='find_me' href='#'>find me</a>)</small>
+        </h4>
+        <input class='input-block-level' id='search_address' placeholder='Enter an address or an intersection' type='text' />
+        <label>
+          within
+          <select class='input-small' id='search_radius'>
+            <option value='400'>2 blocks</option>
+            <option value='805'>1/2 mile</option>
+            <option value='1610'>1 mile</option>
+            <option value='3220'>2 miles</option>
+          </select>
+        </label>
+        <input class='btn btn-primary' id='search' type='button' value='Search' />
+        <button class='btn' id='reset'>Reset</button>
+      </div>
+      <p class='alert alert-info lead' id='result_count'></p>
+    </div>
+    <div class='span8'>
+      <noscript>
+        <div class='alert alert-info'>
+          <h4>Your JavaScript is disabled</h4>
+          <p>Please enable JavaScript to view the map.</p>
+        </div>
+      </noscript>
+      <div id='map_canvas'></div>
+      <p class='pull-right'>
+        By <a href='http://derekeder.com'>Derek Eder</a>.
+    </p>
+    </div>
+  </div>
+</div>
 
-  <!-- Services -->
-  <section id="mapid">
-    <div id="map"></div>
+<script type="text/javascript" src="source/jquery.js"></script>
+<script type="text/javascript" src="source/bootstrap.js"></script>
+<script type="text/javascript" src="source/jquery.address.min.js"></script>
+<script type="text/javascript" src="source/leaflet.js"></script>
+<script type="text/javascript" src="source/d3.min.js"></script>
+<script type="text/javascript" src="source/queue.min.js"></script>
 
-    <script>
+<script type="text/javascript" src="source/leaflet_lib.js"></script>
+<script type='text/javascript'>
+  //<![CDATA[
+    function ready(error, features) {
+      LeafletLib.initialize($("#map_canvas")[0], features, [ 41.8781136, -87.66677956445312 ], 11);
+    }
+    $(window).resize(function () {
+      var h = $(window).height(),
+        offsetTop = 90; // Calculate the top offset
 
-      var mymap = L.map('mapid').setView([51.505, -0.09], 13);
+      $('#map_canvas').css('height', (h - offsetTop));
+    }).resize();
 
-      L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
-    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-    maxZoom: 18,
-    id: 'mapbox.streets',
-    accessToken: 'your.mapbox.access.token'
-}).addTo(mymap);
+    $(function() {
+      queue().defer(d3.json, "https://data.cityofchicago.org/resource/y7qa-tvqx.json?$select=facility_name,park,location,facility_type&$where=facility_name='POOL%20(OUTDOOR)' OR facility_name='POOL%20(INDOOR)'").await(ready);
+      $('#reset').click(function(){
+        $.address.parameter('address','');
+        LeafletLib.initialize();
+        return false;
+      });
 
-    </script>
-  </section>
+      $("#search").on("click", LeafletLib.searchFeature);
+      $("#search_address").on("keydown", function(e){
+        if(e.keyCode == 13){
+          LeafletLib.searchFeature();
+        }
+      });
+      $("#find_me").on("click", function(e){
+        LeafletLib.searchRadius = $("#search_radius").val();
+        LeafletLib.geolocate();
+      });
+    });
+  //]]>
+</script>
 
 
   <!-- Contact -->
