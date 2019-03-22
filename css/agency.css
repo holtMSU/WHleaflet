@@ -164,6 +164,8 @@ img::-moz-selection {
   }
 }
 
+#mapid { height: 180px; }
+
 header.masthead {
   text-align: center;
   color: white;
